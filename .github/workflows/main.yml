@@ -2,7 +2,7 @@ name: Update Journal RSS
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天北京时间早上 8 点自动运行 (UTC 0点)
+    - cron: '0 0 1,16 * *'
   workflow_dispatch:      # 允许你在网页上手动点击按钮运行
 
 permissions:
