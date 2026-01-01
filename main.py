@@ -6,18 +6,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
+# ✅ 引入库
+from fake_useragent import UserAgent
+
+# ✅ 生成随机 User-Agent
+ua = UserAgent()
+random_ua = ua.random
 
 options = Options()
 options.add_argument("--headless")  # 必须：无界面模式
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-blink-features=AutomationControlled")
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+options.add_argument(f"user-agent={random_ua}")
 
 driver = webdriver.Chrome(options=options)
 driver.get("https://publications.aaahq.org/accounting-review/publish-ahead-of-print")
 
-WebDriverWait(driver, 30).until(
+WebDriverWait(driver, 15).until(
     EC.presence_of_element_located((By.CSS_SELECTOR, "div.al-article-items"))
 )
 
