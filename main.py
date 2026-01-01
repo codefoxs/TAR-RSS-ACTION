@@ -7,9 +7,9 @@ import sys
 
 def generate_rss():
     # 1. 从环境变量获取 API Key
-    api_key = os.getenv("scraper_api")
+    api_key = os.getenv("SCRAPER_API")
     if not api_key:
-        print("❌ 错误: 请在 GitHub Secrets 中配置 scraper_api")
+        print("❌ 错误: 请在 GitHub Secrets 中配置 SCRAPER_API")
         sys.exit(1)
 
     # 2. 准备请求参数
