@@ -1,41 +1,36 @@
-name: Update Journal RSS
+name: Update RSS
 
 on:
   schedule:
-    - cron: '0 0 1,16 * *'
-  workflow_dispatch:      # 允许你在网页上手动点击按钮运行
-
-permissions:
-  contents: write         # 允许 Action 把生成的 xml 文件写回你的仓库
+    - cron: '0 0 1,16 * *' # 每天运行一次
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: 检查代码
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: 设置 Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: 安装 Chrome 浏览器
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 lxml
 
-    - name: 安装依赖
-      run: |
-        pip install -r requirements.txt
+      - name: Run Scraper
+        env:
+          # 关键：将 Secret 注入为环境变量
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+        run: python main.py
 
-    - name: 运行爬虫脚本
-      run: python main.py
-
-    - name: 提交并推送生成的 XML 文件
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add tar.xml
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update RSS feed" && git push)
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add tar.xml
+          git commit -m "Update RSS [skip ci]" || exit 0
+          git push
