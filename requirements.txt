@@ -1,4 +1,4 @@
-selenium
+undetected-chromedriver
 beautifulsoup4
 lxml
-fake_useragent
+selenium
