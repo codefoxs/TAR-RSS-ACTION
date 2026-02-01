@@ -4,6 +4,17 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 import sys
+from fake_useragent import UserAgent  # 导入库
+
+def get_random_headers():
+    """生成随机请求头"""
+    ua = UserAgent()
+    return {
+        'User-Agent': ua.random,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+    }
 
 def generate_rss():
     # 1. 从环境变量获取 API Key
@@ -13,19 +24,28 @@ def generate_rss():
         sys.exit(1)
 
     # 2. 准备请求参数
-    # 如果后续发现抓不到文章，可以在 payload 增加 'render': 'true'
     target_url = "https://publications.aaahq.org/accounting-review/publish-ahead-of-print"
+    
+    # 获取随机 Header
+    headers = get_random_headers()
+    
     payload = { 
         'api_key': api_key, 
         'url': target_url,
-        'keep_headers': 'true' # 建议加上，让 ScraperAPI 更好地处理请求头
+        'keep_headers': 'true' # 告诉 ScraperAPI 转发我们自定义的 headers
     }
 
     print(f"🚀 正在通过 ScraperAPI 请求: {target_url}")
+    print(f"🕵️ 使用伪装 User-Agent: {headers['User-Agent']}")
     
     try:
-        # 使用你提到的 api.scraperapi.com 接口
-        r = requests.get('https://api.scraperapi.com/', params=payload, timeout=60)
+        # 将 headers 传入 requests
+        r = requests.get(
+            'https://api.scraperapi.com/', 
+            params=payload, 
+            headers=headers, 
+            timeout=60
+        )
         r.raise_for_status()
         html = r.text
         print("✅ 页面抓取成功!")
@@ -39,9 +59,8 @@ def generate_rss():
     
     if not articles:
         print("⚠️ 未找到文章元素。")
-        # 调试：看看是不是被拦截了
         if "captcha" in html.lower() or "robot" in html.lower():
-            print("🛑 似乎遇到了验证码，可能需要增加 render: true 参数")
+            print("🛑 似乎遇到了验证码。ScraperAPI 建议尝试增加 'render': 'true' 参数")
         return
 
     # 4. 创建 RSS 结构
@@ -79,7 +98,7 @@ def generate_rss():
         ET.SubElement(item, "description").text = f"<b>Authors:</b> {authors}<br/>{pub_date}"
         count += 1
 
-    # 6. 输出 rss.xml
+    # 6. 输出 tar.xml
     tree = ET.ElementTree(rss)
     tree.write("tar.xml", encoding="utf-8", xml_declaration=True)
     print(f"🎉 完成! 已生成 {count} 篇文章")
