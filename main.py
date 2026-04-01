@@ -39,16 +39,32 @@ def generate_rss():
     print(f"🕵️ 使用伪装 User-Agent: {headers['User-Agent']}")
     
     try:
-        # 将 headers 传入 requests
+        # Remove custom headers when using ScraperAPI's keep_headers
+        # ScraperAPI will handle the headers internally
         r = requests.get(
             'https://api.scraperapi.com/', 
             params=payload, 
-            headers=headers, 
             timeout=60
         )
         r.raise_for_status()
         html = r.text
         print("✅ 页面抓取成功!")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 500:
+            print(f"❌ ScraperAPI 返回 500 错误。尝试启用渲染功能...")
+            # Retry with render option
+            payload['render'] = 'true'
+            try:
+                r = requests.get('https://api.scraperapi.com/', params=payload, timeout=90)
+                r.raise_for_status()
+                html = r.text
+                print("✅ 页面抓取成功 (使用渲染)!")
+            except Exception as retry_error:
+                print(f"❌ 抓取失败: {retry_error}")
+                sys.exit(1)
+        else:
+            print(f"❌ 抓取失败: {e}")
+            sys.exit(1)
     except Exception as e:
         print(f"❌ 抓取失败: {e}")
         sys.exit(1)
